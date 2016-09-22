@@ -6,11 +6,12 @@
   "scripts": {
     "test": "babel-node test/index.js",
     "build": "rm -rf lib && babel src -d lib",
-    "preinstall": "npm run build"
+    "prepublish": "npm run build"
   },
   "author": "Julien Vincent",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.14.0",
     "isomorphic-fetch": "^2.2.1",
     "letsencrypt": "^2.1.7"
   },

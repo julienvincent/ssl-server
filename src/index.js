@@ -2,6 +2,7 @@
 import http from 'http'
 import https from 'https'
 import LetsEncrypt from 'letsencrypt'
+import express from 'express'
 import StorageHandler, { ApiType } from './storage'
 
 import RedirectToHttps from 'redirect-https'
@@ -12,11 +13,13 @@ type ConfigType = {
     token: String,
     domain: String,
     email: String,
-    app: Object,
+    app: ?Object,
     production: Boolean
 }
 
 export default (config: ConfigType) => {
+    config.app = config.app || express()
+
     if (config.production) {
         const Handler = LetsEncrypt.create({
             server: config.server || "staging",
