@@ -1,7 +1,7 @@
 {
-  "name": "log-to-stream",
+  "name": "ssl-server",
   "version": "0.0.1",
-  "description": "Lib for logging to a stream",
+  "description": "SSL cert generation and server",
   "main": "lib/index.js",
   "scripts": {
     "test": "babel-node test/index.js",

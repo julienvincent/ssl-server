@@ -1,12 +1,12 @@
 import 'isomorphic-fetch'
 
-export default ({url, clusterKey}) => {
+export default ({url, token}) => {
     const Fetch = query => fetch(url, {
         method: "POST",
         headers: {
             'accept': 'application/json',
             'content-type': 'application/json',
-            'authorization': clusterKey
+            'authorization': token
         },
         body: JSON.stringify({query})
     })
@@ -49,13 +49,13 @@ export default ({url, clusterKey}) => {
                 }
             `).then(({getCertificateKey}) => getCertificateKey)
         },
-        setCertificate({privateKey, domain, certificate, chain}) {
+        setCertificate({privateKey, domain, cert, chain}) {
             return Fetch(`
                 mutation store {
                     storeCertificateKey(
                                 domain: "${domain}",
                                 privateKey: "${privateKey.replace(/\r?\n|\r/g, "\\n")}"
-                                ${certificate ? `, cert: "${certificate.replace(/\r?\n|\r/g, "\\n")}"` : ''}
+                                ${cert ? `, cert: "${cert.replace(/\r?\n|\r/g, "\\n")}"` : ''}
                                 ${chain ? `, chain: "${chain.replace(/\r?\n|\r/g, "\\n")}"` : ''},
                                 ) {
                         privateKey,

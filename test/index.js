@@ -4,8 +4,9 @@ import express from 'express'
 server({
     email: 'julienlucvincent@gmail.com',
     domain: 'temp.yumochefs.com',
-    clusterKey: "localhost",
+    token: "localhost",
     api: "http://localhost:8080/graphql",
     server: "staging",
+    production: false,
     app: express()
-}).listen(80, 443)
+}).listen(80, 3000)

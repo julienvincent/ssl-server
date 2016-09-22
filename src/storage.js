@@ -10,7 +10,7 @@ export type ApiType = {
 
 type Config = {
     api: ApiType | String,
-    clusterKey: String
+    token: String
 }
 
 type AccountOptions = {
@@ -34,7 +34,7 @@ export default (config: Config) => {
 
     let apiMethods: ApiType
     if (typeof config.api == 'string') {
-        apiMethods = FetchAPI({url: config.api, clusterKey: config.clusterKey})
+        apiMethods = FetchAPI({url: config.api, token: config.token})
     } else {
         apiMethods = config.api
     }
@@ -160,7 +160,7 @@ export default (config: Config) => {
                 setCertificate({
                     domain: opts.domains[0],
                     privateKey: pem.privkey,
-                    certificate: pem.cert,
+                    cert: pem.cert,
                     chain: pem.chain
                 })
                     .then(certificate => {

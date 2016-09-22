@@ -1,7 +1,13 @@
-# SSL Regen process
+# usage
 
-+ Scheduler (jobs) -> request ssl server
-+ SSL server regens certs
-+ SSl server checks if personal key matches key in request, if true:
-+ SSl server sends certs to jobs server.
-+ Jobs server saves certs in kubernetes secret
+```javascript
+server({
+    email: 'julienlucvincent@gmail.com',
+    domain: 'example.com',
+    token: SERVER_TOKEN,
+    api: "http://localhost:8080/graphql",
+    server: "staging" | "production",
+    production: false,
+    app: express()
+}).listen(80, 3000)
+```
