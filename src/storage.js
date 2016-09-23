@@ -140,12 +140,14 @@ export default (config: Config) => {
 
                 getCertificate({domain: opts.domains[0]})
                     .then(certificate => {
-                        if (certificate) return cb(null, {
-                            privkey: certificate.privateKey,
-                            domains: [certificate.domain],
-                            cert: certificate.certificate,
-                            chain: certificate.chain
-                        })
+                        if (certificate) {
+                            if (certificate.cert && certificate.chain) return cb(null, {
+                                privkey: certificate.privateKey,
+                                domains: [certificate.domain],
+                                cert: certificate.certificate,
+                                chain: certificate.chain
+                            })
+                        }
                         cb(null)
                     })
                     .catch(e => {

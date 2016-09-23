@@ -7,6 +7,6 @@ server({
     token: "localhost",
     api: "http://localhost:8080/graphql",
     server: "staging",
-    production: false,
+    production: true,
     app: express()
 }).listen(80, 3000)
