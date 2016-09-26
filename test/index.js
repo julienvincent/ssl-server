@@ -9,4 +9,4 @@ server({
     server: "staging",
     production: true,
     app: express()
-}).listen(80, 3000)
+}).listen(80, 443)

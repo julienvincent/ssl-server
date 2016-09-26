@@ -3,6 +3,7 @@ import http from 'http'
 import https from 'https'
 import LetsEncrypt from 'letsencrypt'
 import express from 'express'
+import FetchAPI from './fetch'
 import StorageHandler, { ApiType } from './storage'
 
 import RedirectToHttps from 'redirect-https'
@@ -21,12 +22,17 @@ export default (config: ConfigType) => {
     config.app = config.app || express()
 
     if (config.production) {
+        let StorageMethods = config.api
+        if (typeof config.api === 'string') {
+            StorageMethods = FetchAPI({url: config.api, token: config.token})
+        }
+
         const Handler = LetsEncrypt.create({
             server: config.server || "staging",
             agreeTos: true,
             email: config.email,
             approveDomains: [config.domain],
-            store: StorageHandler({api: config.api, token: config.token})
+            store: StorageHandler(StorageMethods)
         })
 
         const ACMEHandler = http.createServer(Handler.middleware(RedirectToHttps()))

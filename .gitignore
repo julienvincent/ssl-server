@@ -2,5 +2,6 @@
 .DS_Store
 
 npm-debug.log
+acme-challenge
 
 node_modules

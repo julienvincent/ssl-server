@@ -1,16 +1,9 @@
 // @flow
-import FetchAPI from './fetch'
-
 export type ApiType = {
     getAccount: Function,
     setAccount: Function,
     getCertificate: Function,
     setCertificate: Function
-}
-
-type Config = {
-    api: ApiType | String,
-    token: String
 }
 
 type AccountOptions = {
@@ -30,16 +23,8 @@ type Pems = {
     chain: String
 }
 
-export default (config: Config) => {
-
-    let apiMethods: ApiType
-    if (typeof config.api == 'string') {
-        apiMethods = FetchAPI({url: config.api, token: config.token})
-    } else {
-        apiMethods = config.api
-    }
-
-    const {getAccount, setAccount, getCertificate, setCertificate} = apiMethods
+export default (api: ApiType) => {
+    const {getAccount, setAccount, getCertificate, setCertificate} = api
 
     return {
         accounts: {
@@ -125,7 +110,6 @@ export default (config: Config) => {
 
                 setCertificate({domain: opts.domains[0], privateKey: keypair.privateKeyPem})
                     .then(certificate => {
-                        console.log(certificate)
                         if (certificate) return cb(null, keypair)
                         cb(null)
                     })
