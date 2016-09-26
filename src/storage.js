@@ -20,7 +20,9 @@ type RegistrationResult = {
 type Pems = {
     privkey: String,
     cert: String,
-    chain: String
+    chain: String,
+    issuedAt: Number,
+    expiresAt: Number
 }
 
 export default (api: ApiType) => {
@@ -129,7 +131,9 @@ export default (api: ApiType) => {
                                 privkey: certificate.privateKey,
                                 domains: [certificate.domain],
                                 cert: certificate.certificate,
-                                chain: certificate.chain
+                                chain: certificate.chain,
+                                expiresAt: certificate.expiresAt,
+                                issuedAt: certificate.issuedAt
                             })
                         }
                         cb(null)
@@ -147,7 +151,9 @@ export default (api: ApiType) => {
                     domain: opts.domains[0],
                     privateKey: pem.privkey,
                     cert: pem.cert,
-                    chain: pem.chain
+                    chain: pem.chain,
+                    issuedAt: pem.issuedAt,
+                    expiresAt: pem.expiresAt
                 })
                     .then(certificate => {
                         if (certificate) return cb(null, opts.pems)

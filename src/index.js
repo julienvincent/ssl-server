@@ -5,6 +5,7 @@ import LetsEncrypt from 'letsencrypt'
 import express from 'express'
 import FetchAPI from './fetch'
 import StorageHandler, { ApiType } from './storage'
+import SNICreator from './sni'
 
 import RedirectToHttps from 'redirect-https'
 
@@ -27,12 +28,15 @@ export default (config: ConfigType) => {
             StorageMethods = FetchAPI({url: config.api, token: config.token})
         }
 
+        const SNI = SNICreator()
+
         const Handler = LetsEncrypt.create({
             server: config.server || "staging",
             agreeTos: true,
             email: config.email,
             approveDomains: [config.domain],
-            store: StorageHandler(StorageMethods)
+            store: StorageHandler(StorageMethods),
+            sni: SNI
         })
 
         const ACMEHandler = http.createServer(Handler.middleware(RedirectToHttps()))
@@ -40,11 +44,25 @@ export default (config: ConfigType) => {
 
         return {
             listen(redirect, primary) {
-                Handler.register({
-                    domains: [config.domain],
-                    email: config.email,
-                    agreeTos: true
-                })
+                StorageMethods.getCertificate({domain: config.domain})
+                    .then(certificate => {
+                        if (certificate) {
+                            if (certificate.chain && certificate.certificate) {
+                                console.log("Certificate found. Adding to cache")
+                                return SNI.cacheCerts({
+                                    chain: certificate.chain,
+                                    privkey: certificate.privateKey,
+                                    cert: certificate.certificate,
+                                })
+                            }
+                        }
+
+                        Handler.register({
+                            domains: [config.domain],
+                            email: config.email,
+                            agreeTos: true
+                        }).then(SNI.cacheCerts)
+                    })
 
                 ACMEHandler.listen(redirect, () => console.log("Handling challenges and redirecting to https"))
                 server.listen(primary, () => console.log("Listening for incoming connections"))

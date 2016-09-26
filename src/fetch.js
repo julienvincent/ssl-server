@@ -44,24 +44,30 @@ export default ({url, token}) => {
                         privateKey,
                         domain,
                         certificate,
-                        chain
+                        chain,
+                        expiresAt,
+                        issuedAt
                     }
                 }
             `).then(({getCertificateKey}) => getCertificateKey)
         },
-        setCertificate({privateKey, domain, cert, chain}) {
+        setCertificate({privateKey, domain, cert, chain, issuedAt, expiresAt}) {
             return Fetch(`
                 mutation store {
                     storeCertificateKey(
                                 domain: "${domain}",
                                 privateKey: "${privateKey.replace(/\r?\n|\r/g, "\\n")}"
                                 ${cert ? `, cert: "${cert.replace(/\r?\n|\r/g, "\\n")}"` : ''}
-                                ${chain ? `, chain: "${chain.replace(/\r?\n|\r/g, "\\n")}"` : ''},
+                                ${chain ? `, chain: "${chain.replace(/\r?\n|\r/g, "\\n")}"` : ''}
+                                ${issuedAt ? `, issuedAt: ${issuedAt}` : ''}
+                                ${expiresAt ? `, expiresAt: ${expiresAt}` : ''}
                                 ) {
                         privateKey,
                         domain,
                         certificate,
-                        chain
+                        chain,
+                        expiresAt,
+                        issuedAt
                     }
                 }
             `).then(({storeCertificateKey}) => storeCertificateKey)
