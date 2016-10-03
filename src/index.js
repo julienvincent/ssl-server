@@ -16,7 +16,8 @@ type ConfigType = {
     domain: String,
     email: String,
     app: ?Object,
-    production: Boolean
+    production: Boolean,
+    httpRedirect: ?Boolean
 }
 
 export default (config: ConfigType) => {
@@ -39,7 +40,9 @@ export default (config: ConfigType) => {
             sni: SNI
         })
 
-        const ACMEHandler = http.createServer(Handler.middleware(RedirectToHttps()))
+        const httpMiddleware = config.httpRedirect ? RedirectToHttps() : config.app
+
+        const ACMEHandler = http.createServer(Handler.middleware(httpMiddleware))
         const server = https.createServer(Handler.httpsOptions, Handler.middleware(config.app))
 
         return {

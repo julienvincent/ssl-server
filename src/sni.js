@@ -17,7 +17,7 @@ export default () => {
                     requestCert: false,
                     ca: null,
                     crl: null
-                }) // might need fake tls options to be here
+                })
             }
 
             return config.cache
