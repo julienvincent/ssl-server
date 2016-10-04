@@ -20,6 +20,7 @@ export default () => {
                 })
             }
 
+            console.log("SSL: Certs cached")
             return config.cache
         },
         sniCallback(domain, cb) {

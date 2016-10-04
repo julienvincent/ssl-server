@@ -51,7 +51,7 @@ export default (config: ConfigType) => {
                     .then(certificate => {
                         if (certificate) {
                             if (certificate.chain && certificate.certificate) {
-                                console.log("Certificate found. Adding to cache")
+                                console.log("SSL: Certificate found. caching")
                                 return SNI.cacheCerts({
                                     chain: certificate.chain,
                                     privkey: certificate.privateKey,
@@ -64,10 +64,13 @@ export default (config: ConfigType) => {
                             domains: [config.domain],
                             email: config.email,
                             agreeTos: true
-                        }).then(SNI.cacheCerts)
+                        }).then(certs => {
+                            console.log("SSL: Success - caching")
+                            SNI.cacheCerts(certs)
+                        })
                     })
 
-                ACMEHandler.listen(redirect, () => console.log("Handling challenges and redirecting to https"))
+                ACMEHandler.listen(redirect, () => console.log(`Handling challenges ${config.httpRedirect ? "and redirecting to https" : ""}`))
                 server.listen(primary, () => console.log("Listening for incoming connections"))
             },
 
