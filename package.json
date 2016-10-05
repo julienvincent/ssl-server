@@ -11,12 +11,12 @@
   "author": "Julien Vincent",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.14.0",
     "isomorphic-fetch": "^2.2.1",
     "letsencrypt": "^2.1.7",
     "redirect-https": "^1.1.0"
   },
   "devDependencies": {
-    "express": "^4.14.0",
     "babel-cli": "^6.14.0",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-es2015": "^6.14.0",
