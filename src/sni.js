@@ -27,8 +27,7 @@ export default () => {
             if (config.cache.tlsContext) {
                 cb(null, config.cache.tlsContext)
             } else {
-                console.error("No certificates in cache")
-                cb(new Error("No certificates in cache"))
+                cb()
             }
         },
 
