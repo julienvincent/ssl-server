@@ -4,4 +4,6 @@
 npm-debug.log
 acme-challenge
 
+lib
+
 node_modules

@@ -1,8 +1,11 @@
 {
   "name": "ssl-server",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "SSL cert generation, cert storage and server",
   "main": "lib/index.js",
+  "publishConfig": {
+    "registry": "http://registry.yumochefs.com"
+  },
   "scripts": {
     "test": "babel-node test/index.js",
     "build": "rm -rf lib && babel src -d lib",
