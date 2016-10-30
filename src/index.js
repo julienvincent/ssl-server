@@ -47,28 +47,33 @@ export default (config: ConfigType) => {
 
         return {
             listen(redirect, primary) {
-                StorageMethods.getCertificate({domain: config.domain})
-                    .then(certificate => {
-                        if (certificate) {
-                            if (certificate.chain && certificate.certificate) {
-                                console.log("SSL: Certificate found. caching")
-                                return SNI.cacheCerts({
-                                    chain: certificate.chain,
-                                    privkey: certificate.privateKey,
-                                    cert: certificate.certificate,
-                                })
+                const searchCache = () =>
+                    StorageMethods.getCertificate({domain: config.domain})
+                        .then(certificate => {
+                            if (certificate) {
+                                if (certificate.chain && certificate.certificate) {
+                                    console.log("SSL: Certificate found. caching")
+                                    return SNI.cacheCerts({
+                                        chain: certificate.chain,
+                                        privkey: certificate.privateKey,
+                                        cert: certificate.certificate,
+                                    })
+                                }
                             }
-                        }
 
-                        Handler.register({
-                            domains: [config.domain],
-                            email: config.email,
-                            agreeTos: true
-                        }).then(certs => {
-                            console.log("SSL: Success - caching")
-                            SNI.cacheCerts(certs)
+                            Handler.register({
+                                domains: [config.domain],
+                                email: config.email,
+                                agreeTos: true
+                            }).then(certs => {
+                                console.log("SSL: Success - caching")
+                                SNI.cacheCerts(certs)
+                            })
                         })
-                    })
+                        .catch(() => {
+                            console.log("Could not establish a connection to backend. retrying in 20 seconds")
+                            setTimeout(searchCache, 20000)
+                        })
 
                 ACMEHandler.listen(redirect, () => console.log(`Handling challenges ${config.httpRedirect ? "and redirecting to https" : ""}`))
                 server.listen(primary, () => console.log("Listening for incoming connections"))
