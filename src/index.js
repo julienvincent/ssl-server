@@ -75,6 +75,8 @@ export default (config: ConfigType) => {
                             setTimeout(searchCache, 20000)
                         })
 
+                searchCache()
+
                 ACMEHandler.listen(redirect, () => console.log(`Handling challenges ${config.httpRedirect ? "and redirecting to https" : ""}`))
                 server.listen(primary, () => console.log("Listening for incoming connections"))
             },

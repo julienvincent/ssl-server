@@ -8,6 +8,6 @@ server({
     api: "http://localhost:8080/graphql",
     server: "staging",
     production: true,
-    httpRedirect: false,
+    httpRedirect: true,
     app: express()
 }).listen(80, 443)
