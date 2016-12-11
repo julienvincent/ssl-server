@@ -1,5 +1,5 @@
 {
-  "name": "@yumo/ssl-server",
+  "name": "local-ssl-server",
   "version": "0.1.2",
   "description": "SSL cert generation, cert storage and server",
   "main": "lib/index.js",
