@@ -6,92 +6,144 @@ import express from 'express'
 import FetchAPI from './fetch'
 import StorageHandler, { ApiType } from './storage'
 import SNICreator from './sni'
+import moment from 'moment'
 
 import RedirectToHttps from 'redirect-https'
 
 type ConfigType = {
-    server: "staging" | "production",
-    api: String | ApiType,
-    token: String,
-    domain: String,
-    email: String,
-    app: ?Object,
-    production: Boolean,
-    httpRedirect: ?Boolean
+   server: "staging" | "production",
+   api: string | ApiType,
+   token: string,
+   domain: string,
+   email: ?string,
+   app: ?Object,
+   logger: {
+      info: Function,
+      error: Function
+   },
+   production: boolean,
+   httpRedirect: ?boolean
 }
 
 export default (config: ConfigType) => {
-    config.app = config.app || express()
+   const defaultConfig = {
+      app: express(),
+      token: process.env.SERVER_TOKEN,
+      email: "julienlucvincent@gmail.com",
+      api: `${process.env.PROTOCOL}://${process.env.API}/graphql`,
+      server: process.env.STAGE ? 'production' : 'staging',
+      httpRedirect: true,
+      logger: {
+         info: console.log,
+         error: console.log
+      },
+   }
 
-    if (config.production) {
-        let StorageMethods = config.api
-        if (typeof config.api === 'string') {
-            StorageMethods = FetchAPI({url: config.api, token: config.token})
-        }
+   config = {
+      ...defaultConfig,
+      ...config
+   }
 
-        const SNI = SNICreator()
+   if (config.production) {
+      let StorageMethods = config.api
+      if (typeof config.api === 'string') {
+         StorageMethods = FetchAPI({url: config.api, token: config.token})
+      }
 
-        const Handler = LetsEncrypt.create({
-            server: config.server || "staging",
-            agreeTos: true,
-            email: config.email,
-            approveDomains: [config.domain],
-            store: StorageHandler(StorageMethods),
-            sni: SNI
-        })
+      const SNI = SNICreator(config.logger)
 
-        const httpMiddleware = config.httpRedirect ? RedirectToHttps() : config.app
+      const Handler = LetsEncrypt.create({
+         server: config.server || "staging",
+         agreeTos: true,
+         email: config.email,
+         approveDomains: [config.domain],
+         store: StorageHandler(StorageMethods, config.logger),
+         sni: SNI
+      })
 
-        const ACMEHandler = http.createServer(Handler.middleware(httpMiddleware))
-        const server = https.createServer(Handler.httpsOptions, Handler.middleware(config.app))
+      const httpMiddleware = config.httpRedirect ? RedirectToHttps() : config.app
 
-        return {
-            listen(redirect, primary) {
-                const searchCache = () =>
-                    StorageMethods.getCertificate({domain: config.domain})
-                        .then(certificate => {
-                            if (certificate) {
-                                if (certificate.chain && certificate.certificate) {
-                                    console.log("SSL: Certificate found. caching")
-                                    return SNI.cacheCerts({
-                                        chain: certificate.chain,
-                                        privkey: certificate.privateKey,
-                                        cert: certificate.certificate,
-                                    })
-                                }
-                            }
+      const ACMEHandler = http.createServer(Handler.middleware(httpMiddleware))
+      const server = https.createServer(Handler.httpsOptions, Handler.middleware(config.app))
 
-                            Handler.register({
-                                domains: [config.domain],
-                                email: config.email,
-                                agreeTos: true
-                            }).then(certs => {
-                                console.log("SSL: Success - caching")
-                                SNI.cacheCerts(certs)
-                            })
+      config.app.get("/__renew_certificate", () => {
+         StorageMethods.getCertificate({domain: config.domain})
+            .then(certificate => {
+               if (certificate) {
+                  if (certificate.chain && certificate.certificate) {
+                     const expiryDate = moment(new Date(certificate.expiresAt))
+
+                     const isAfter = expiryDate.isAfter(moment())
+                     const isWithinRange = expiryDate.diff(moment(), 'days') <= 10
+
+                     if (isAfter || isWithinRange) {
+                        Handler.register({
+                           domains: [config.domain],
+                           email: config.email,
+                           agreeTos: true
                         })
-                        .catch(() => {
-                            console.log("Could not establish a connection to backend. retrying in 20 seconds")
-                            setTimeout(searchCache, 20000)
-                        })
+                           .then(certs => {
+                              config.logger.info("SSL: Successfully Renewed - caching")
+                              SNI.cacheCerts(certs)
+                           })
+                           .catch(e => {
+                              config.logger.error("Something went wrong renewing certificates")
+                           })
+                     } else {
+                        config.logger.error("Certificate is not in renew range", {certificate})
+                     }
+                  }
+               }
+            })
+      })
 
-                searchCache()
+      return {
+         listen(redirect, primary) {
+            const searchCache = () =>
+               StorageMethods.getCertificate({domain: config.domain})
+                  .then(certificate => {
+                     if (certificate) {
+                        if (certificate.chain && certificate.certificate) {
+                           config.logger.info("SSL: Certificate found. caching")
+                           return SNI.cacheCerts({
+                              chain: certificate.chain,
+                              privkey: certificate.privateKey,
+                              cert: certificate.certificate,
+                           })
+                        }
+                     }
 
-                ACMEHandler.listen(redirect, () => console.log(`Handling challenges ${config.httpRedirect ? "and redirecting to https" : ""}`))
-                server.listen(primary, () => console.log("Listening for incoming connections"))
-            },
+                     Handler.register({
+                        domains: [config.domain],
+                        email: config.email,
+                        agreeTos: true
+                     }).then(certs => {
+                        config.logger.info("SSL: Success - caching")
+                        SNI.cacheCerts(certs)
+                     })
+                  })
+                  .catch(() => {
+                     config.logger.error("Could not establish a connection to backend. retrying in 20 seconds")
+                     setTimeout(searchCache, 20000)
+                  })
 
-            server
-        }
-    } else {
-        const server = http.createServer(config.app)
+            searchCache()
 
-        return {
-            listen(r, primary) {
-                console.log("development")
-                server.listen(primary, () => console.log(`Listening for incoming connections on port :${primary}`))
-            },
-            server
-        }
-    }
+            ACMEHandler.listen(redirect, () => config.logger.info(`Handling challenges ${config.httpRedirect ? "and redirecting to https" : ""}`))
+            server.listen(primary, () => config.logger.info("Listening for incoming connections"))
+         },
+
+         server
+      }
+   } else {
+      const server = http.createServer(config.app)
+
+      return {
+         listen(r, primary) {
+            console.log("development")
+            server.listen(primary, () => config.logger.info(`Listening for incoming connections on port :${primary}`))
+         },
+         server
+      }
+   }
 }
