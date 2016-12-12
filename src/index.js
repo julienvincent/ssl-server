@@ -66,7 +66,7 @@ export default (config: ConfigType) => {
       const ACMEHandler = http.createServer(Handler.middleware(httpMiddleware))
       const server = https.createServer(Handler.httpsOptions, Handler.middleware(config.app))
 
-      config.app.get("/__renew_certificate", () => {
+      config.app.get("/__renew_certificate", (req, res) => {
          StorageMethods.getCertificate({domain: config.domain})
             .then(certificate => {
                if (certificate) {
@@ -84,9 +84,11 @@ export default (config: ConfigType) => {
                         })
                            .then(certs => {
                               config.logger.info("SSL: Successfully Renewed - caching")
+                              res.send("Successful")
                               SNI.cacheCerts(certs)
                            })
                            .catch(e => {
+                              res.send("Unsuccessful")
                               config.logger.error("Something went wrong renewing certificates")
                            })
                      } else {
