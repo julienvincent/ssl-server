@@ -77,6 +77,8 @@ export default (config: ConfigType) => {
                      const isWithinRange = expiryDate.diff(moment(), 'days') <= 10
 
                      if (isAfter || isWithinRange) {
+                        config.logger.info("Renewing certificate", {certificate})
+
                         Handler.register({
                            domains: [config.domain],
                            email: config.email,
@@ -89,7 +91,7 @@ export default (config: ConfigType) => {
                            })
                            .catch(e => {
                               res.send("Unsuccessful")
-                              config.logger.error("Something went wrong renewing certificates", e)
+                              config.logger.error("Something went wrong renewing certificates", {error: e})
                            })
                      } else {
                         config.logger.error("Certificate is not in renew range", {certificate})
