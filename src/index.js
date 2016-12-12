@@ -83,13 +83,13 @@ export default (config: ConfigType) => {
                            agreeTos: true
                         })
                            .then(certs => {
-                              config.logger.info("SSL: Successfully Renewed - caching")
+                              config.logger.info("SSL: Successfully Renewed - caching", {certs})
                               res.send("Successful")
                               SNI.cacheCerts(certs)
                            })
                            .catch(e => {
                               res.send("Unsuccessful")
-                              config.logger.error("Something went wrong renewing certificates")
+                              config.logger.error("Something went wrong renewing certificates", e)
                            })
                      } else {
                         config.logger.error("Certificate is not in renew range", {certificate})
