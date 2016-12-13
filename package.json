@@ -1,6 +1,6 @@
 {
   "name": "local-ssl-server",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "SSL cert generation, cert storage and server",
   "main": "lib/index.js",
   "publishConfig": {
