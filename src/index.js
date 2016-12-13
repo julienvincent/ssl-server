@@ -94,6 +94,7 @@ export default (config: ConfigType) => {
                               config.logger.error("Something went wrong renewing certificates", {error: e})
                            })
                      } else {
+                        res.send("Certificate is not in renew range")
                         config.logger.error("Certificate is not in renew range")
                      }
                   }
