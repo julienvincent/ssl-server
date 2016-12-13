@@ -6,7 +6,6 @@ import express from 'express'
 import FetchAPI from './fetch'
 import StorageHandler, { ApiType } from './storage'
 import SNICreator from './sni'
-import moment from 'moment'
 
 import RedirectToHttps from 'redirect-https'
 
@@ -71,13 +70,14 @@ export default (config: ConfigType) => {
             .then(certificate => {
                if (certificate) {
                   if (certificate.chain && certificate.certificate) {
-                     const expiryDate = moment(new Date(certificate.expiresAt))
+                     const expiryDate = new Date(certificate.expiresAt)
+                     const today = new Date()
 
-                     const isAfter = expiryDate.isAfter(moment())
-                     const isWithinRange = expiryDate.diff(moment(), 'days') <= 10
+                     var time = expiryDate.getTime() - today.getTime()
+                     var diff = Math.ceil(time / (1000 * 3600 * 24))
 
-                     if (isAfter || isWithinRange) {
-                        config.logger.info("Renewing certificate", {certificate})
+                     if (diff <= 10) {
+                        config.logger.info("Renewing certificate")
 
                         Handler.register({
                            domains: [config.domain],
@@ -85,7 +85,7 @@ export default (config: ConfigType) => {
                            agreeTos: true
                         })
                            .then(certs => {
-                              config.logger.info("SSL: Successfully Renewed - caching", {certs})
+                              config.logger.info("SSL: Successfully Renewed - caching")
                               res.send("Successful")
                               SNI.cacheCerts(certs)
                            })
@@ -94,7 +94,7 @@ export default (config: ConfigType) => {
                               config.logger.error("Something went wrong renewing certificates", {error: e})
                            })
                      } else {
-                        config.logger.error("Certificate is not in renew range", {certificate})
+                        config.logger.error("Certificate is not in renew range")
                      }
                   }
                }
@@ -122,7 +122,7 @@ export default (config: ConfigType) => {
                         email: config.email,
                         agreeTos: true
                      }).then(certs => {
-                        config.logger.info("SSL: Success - caching")
+                        config.logger.info("SSL: Successfully registered certificate - caching")
                         SNI.cacheCerts(certs)
                      })
                   })
@@ -144,7 +144,6 @@ export default (config: ConfigType) => {
 
       return {
          listen(r, primary) {
-            console.log("development")
             server.listen(primary, () => config.logger.info(`Listening for incoming connections on port :${primary}`))
          },
          server
